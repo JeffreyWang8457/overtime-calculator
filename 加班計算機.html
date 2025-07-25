@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加班計算器</title>
+    <!-- 引入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定義字體為 Inter，確保整體美觀 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F2F2F7; /* Apple風格淺灰色背景 */
+            color: #1C1C1E; /* 深色文字，高對比 */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 調整為從頂部開始，避免內容過長時被截斷 */
+            min-height: 100vh; /* 確保內容至少佔滿整個視窗高度 */
+            padding: 20px; /* 增加整體內邊距 */
+            box-sizing: border-box; /* 包含內邊距和邊框在元素總寬高內 */
+        }
+        .container {
+            background-color: #FFFFFF; /* 純白色容器背景 */
+            border-radius: 12px; /* 柔和圓角 */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03); /* 細膩陰影 */
+            padding: 30px;
+            max-width: 500px; /* 最大寬度 */
+            width: 100%; /* 響應式寬度 */
+            margin-top: 20px; /* 頂部間距 */
+            border: 1px solid #E5E5EA; /* 非常淺的邊框 */
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #8E8E93; /* 中灰色文字，柔和 */
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background-color: #FFFFFF; /* 輸入框白色背景 */
+            border: 1px solid #E5E5EA; /* 淺灰色邊框 */
+            border-radius: 8px; /* 圓角 */
+            font-size: 16px;
+            color: #1C1C1E; /* 輸入框文字顏色 */
+            box-sizing: border-box; /* 確保 padding 不增加寬度 */
+        }
+        /* 針對日期輸入框的文字顏色和背景色進行優化 */
+        .input-group input[type="date"], .entry-item input[type="date"] {
+            background-color: #FFFFFF !important; /* 強制白色背景 */
+            color: #1C1C1E !important; /* 強制深色文字 */
+            opacity: 1 !important; /* 確保沒有透明度問題 */
+        }
+        /* 針對日期輸入框的 placeholder 文字顏色 */
+        .input-group input[type="date"]::placeholder, .entry-item input[type="date"]::placeholder {
+            color: #C7C7CC !important; /* 淺灰色，確保可見 */
+            opacity: 1 !important;
+        }
+
+        /* 針對下拉選單及其選項的文字顏色和背景色進行優化 */
+        .input-group select, .entry-item select {
+            color: #1C1C1E; /* 深色文字，高對比 */
+            background-color: #FFFFFF; /* 設定為白色背景 */
+        }
+        .input-group select option, .entry-item select option {
+            background-color: #FFFFFF; /* 選項背景色與容器一致 */
+            color: #1C1C1E; /* 選項文字顏色 */
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #007AFF; /* 焦點時的 Apple 藍色邊框 */
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2); /* 焦點時的柔和光暈效果 */
+        }
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            text-align: center;
+            display: inline-block;
+            width: auto; /* 讓按鈕寬度自適應 */
+        }
+        .btn-primary {
+            background-color: #007AFF; /* Apple 藍色 */
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 122, 255, 0.2);
+        }
+        .btn-primary:hover {
+            background-color: #005BBF; /* 稍深的藍色 */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 122, 255, 0.3);
+        }
+        .btn-secondary {
+            background-color: #E5E5EA; /* 淺灰色 */
+            color: #1C1C1E; /* 深色文字 */
+            border: 1px solid #D1D1D6; /* 稍深的淺灰色邊框 */
+        }
+        .btn-secondary:hover {
+            background-color: #D1D1D6; /* 稍深的淺灰色 */
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background-color: #FF3B30; /* Apple 紅色 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #CC0000; /* 稍深的紅色 */
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: #007AFF; /* Apple 藍色 */
+            border: 1px solid #007AFF;
+        }
+        .btn-outline:hover {
+            background-color: rgba(0, 122, 255, 0.05); /* 淺藍色透明背景 */
+            transform: translateY(-1px);
+        }
+        .entry-item { /* 統一加班和請假條目的樣式 */
+            display: flex;
+            flex-wrap: wrap; /* 允許換行 */
+            gap: 10px; /* 元素間距 */
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #E5E5EA; /* 淺邊框 */
+            border-radius: 10px;
+            background-color: #FFFFFF; /* 白色背景 */
+            align-items: flex-end; /* 底部對齊 */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* 細膩陰影 */
+        }
+        .entry-item .flex-grow {
+            flex-grow: 1; /* 讓輸入框盡可能佔滿空間 */
+            min-width: 120px; /* 最小寬度 */
+        }
+        .entry-item .remove-btn {
+            flex-shrink: 0; /* 不縮小 */
+            margin-left: auto; /* 推到最右邊 */
+        }
+        .results-area {
+            background-color: #EBF7FF; /* 非常淺的藍色背景 */
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid #B3D9FF; /* 淺藍色邊框 */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .results-area h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #007AFF; /* Apple 藍色 */
+            margin-bottom: 15px;
+        }
+        .results-area p {
+            font-size: 16px;
+            color: #1C1C1E; /* 深色文字 */
+            line-height: 1.6;
+        }
+        .results-area p strong {
+            color: #005BBF; /* 更深的藍色 */
+        }
+        .error-message {
+            color: #FF3B30; /* Apple 紅色 */
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+        .flex-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center; /* 按鈕居中 */
+            flex-wrap: wrap; /* 允許按鈕換行 */
+        }
+        hr {
+            border-top: 1px solid #D1D1D6; /* 淺色分隔線樣式 */
+        }
+        /* 新增的 checkbox 樣式 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px; /* 增大點擊區域 */
+            height: 20px;
+            accent-color: #007AFF; /* Apple 藍色 */
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            margin-bottom: 0; /* 移除預設 label 的下邊距 */
+            font-weight: 500;
+            color: #1C1C1E;
+        }
+        /* 健保眷屬人數輸入框的顯示/隱藏 */
+        .dependents-input-group {
+            display: none; /* 預設隱藏 */
+            margin-top: -10px; /* 調整與上方 checkbox 的間距 */
+            margin-bottom: 20px;
+        }
+        .dependents-input-group.active {
+            display: block; /* 啟用時顯示 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">加班計算器</h1>
+        <p class="text-center text-gray-600 mb-8">
+            計算您在 <span id="currentMonthDisplay"></span> 的加班費及相關補助。
+        </p>
+
+        <!-- 公司名稱輸入 -->
+        <div class="input-group">
+            <label for="companyName">公司名稱</label>
+            <select id="companyName" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <option value="非廣達">非廣達</option>
+                <option value="廣達">廣達</option>
+            </select>
+            <p class="text-sm text-gray-500 mt-1">
+                <small>只有公司名稱為「廣達」時，才計算餐補。</small>
+            </p>
+        </div>
+
+        <!-- 月薪輸入 -->
+        <div class="input-group">
+            <label for="monthlySalary">月薪 (元)</label>
+            <input type="number" id="monthlySalary" placeholder="請輸入純數字，例如：30000" class="focus:ring-blue-500 focus:border-blue-500">
+            <p id="salaryError" class="error-message hidden">請輸入有效的月薪數字。</p>
+        </div>
+
+        <!-- 勞健保扣除選項 -->
+        <div class="checkbox-group">
+            <input type="checkbox" id="deductInsuranceCheckbox">
+            <label for="deductInsuranceCheckbox">是否扣除勞健保費？</label>
+        </div>
+
+        <!-- 健保眷屬人數輸入 (預設隱藏) -->
+        <div class="input-group dependents-input-group" id="dependentsInputGroup">
+            <label for="healthInsuranceDependents">健保眷屬人數</label>
+            <input type="number" id="healthInsuranceDependents" value="0" min="0" class="focus:ring-blue-500 focus:border-blue-500">
+            <p class="text-sm text-gray-500 mt-1">
+                <small>請輸入健保加保的眷屬人數 (不含本人)。</small>
+                <br>
+                <small class="text-red-400">**勞健保費率與級距為內建固定資料，可能無法即時反映最新公告。**</small>
+            </p>
+        </div>
+
+        <!-- 計算月份選擇 -->
+        <div class="input-group flex gap-4">
+            <div class="flex-grow">
+                <label for="calcYear">計算年份</label>
+                <select id="calcYear" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500"></select>
+            </div>
+            <div class="flex-grow">
+                <label for="calcMonth">計算月份</label>
+                <select id="calcMonth" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500"></select>
+            </div>
+        </div>
+
+        <!-- 每月總工作天數輸入 -->
+        <div class="input-group">
+            <label for="totalWorkingDays">每月總工作天數 (選填)</label>
+            <input type="number" id="totalWorkingDays" placeholder="例如：22 (手動輸入優先)" class="focus:ring-blue-500 focus:border-blue-500">
+            <p id="workingDaysError" class="error-message hidden">請輸入有效的總工作天數。</p>
+            <p class="text-sm text-gray-500 mt-1">
+                <small>若不填寫，將自動計算所選月份扣除週六日及內建國定假日後的工作天數。</small>
+                <br>
+                <small class="text-red-400">**國定假日資料為內建固定清單，可能無法即時反映最新公告。請務必核對後手動調整。**</small>
+            </p>
+        </div>
+        
+        <h2 class="text-xl font-bold text-gray-700 mb-4 mt-8">請假記錄</h2>
+        <div id="leaveRecordsContainer">
+            <!-- 請假條目將動態添加到這裡 -->
+        </div>
+        <button id="addLeaveDayBtn" class="btn btn-outline w-full mb-6">
+            + 新增請假記錄
+        </button>
+
+        <h2 class="text-xl font-bold text-gray-700 mb-4 mt-8">加班記錄</h2>
+        <!-- 加班日列表 -->
+        <div id="overtimeDaysContainer">
+            <!-- 加班日條目將動態添加到這裡 -->
+        </div>
+
+        <!-- 新增加班日按鈕 -->
+        <button id="addOvertimeDayBtn" class="btn btn-outline w-full mb-6">
+            + 新增加班日
+        </button>
+
+        <!-- 操作按鈕 -->
+        <div class="flex-container">
+            <button id="calculateBtn" class="btn btn-primary flex-grow">計算加班費與補助</button>
+            <button id="clearAllBtn" class="btn btn-secondary flex-grow">清除所有</button>
+        </div>
+
+        <!-- 結果顯示區 -->
+        <div id="results" class="results-area hidden">
+            <h3 class="text-center">📊 本月加班及補助統計</h3>
+            <p>🔹 月薪：<strong id="displayMonthlySalary"></strong> 元</p>
+            <p>💰 預估時薪：<strong id="displayHourlyWage"></strong> 元</p>
+            <p>🗓️ 實際加班天數：<strong id="displayTotalOvertimeDays"></strong> 天</p>
+            <p>⏱️ 總加班時數：<strong id="displayTotalOvertimeHours"></strong> 小時</p>
+            <hr class="my-4 border-gray-300">
+            <p>💲 純加班費：約 <strong id="displayPureOvertimePay"></strong> 元</p>
+            <p>🍜 中餐補助：約 <strong id="displayLunchSubsidy"></strong> 元</p>
+            <p>🍝 加班餐費補助：約 <strong id="displayOvertimeMealSubsidy"></strong> 元</p>
+            <hr class="my-4 border-gray-300">
+            <p class="text-red-600">➖ 病假扣款：約 <strong id="displaySickLeaveDeduction"></strong> 元</p>
+            <p class="text-red-600">➖ 事假扣款：約 <strong id="displayPersonalLeaveDeduction"></strong> 元</p>
+            <hr class="my-4 border-gray-300">
+            <p class="text-red-600">➖ 勞保費扣除：約 <strong id="displayLaborInsuranceDeduction"></strong> 元</p>
+            <p class="text-red-600">➖ 健保費扣除：約 <strong id="displayHealthInsuranceDeduction"></strong> 元</p>
+            <hr class="my-4 border-gray-300">
+            <p class="text-lg font-bold">💰 總計 (加班費 + 補助 - 扣款)：約 <strong id="displayGrandTotalPay"></strong> 元</p>
+            <p class="text-sm text-gray-600 mt-4">
+                <small>
+                    註：休息日加班費率計算未考慮最低給付時數（如加班1小時給4小時工資），僅依實際加班時數累計費率。若需精確符合法規，請參考勞動部相關規定。
+                    <br>
+                    請假扣款計算基於每月總工作天數及時薪。所有請假天數皆不計算中餐補助。
+                    <br>
+                    **加班時數必須至少為 1 小時才計入加班費及時數。**
+                    <br>
+                    **加班餐費補助需加班時數大於或等於 2 小時才可獲得。**
+                    <br>
+                    **餐補計算依公司名稱判斷：僅「廣達」計算餐補。**
+                    <br>
+                    **勞健保費率與級距為內建固定資料，可能無法即時反映最新公告。**
+                </small>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const companyNameSelect = document.getElementById('companyName'); // Changed to select
+        const monthlySalaryInput = document.getElementById('monthlySalary');
+        const deductInsuranceCheckbox = document.getElementById('deductInsuranceCheckbox');
+        const dependentsInputGroup = document.getElementById('dependentsInputGroup');
+        const healthInsuranceDependentsInput = document.getElementById('healthInsuranceDependents');
+        const calcYearSelect = document.getElementById('calcYear');
+        const calcMonthSelect = document.getElementById('calcMonth');
+        const totalWorkingDaysInput = document.getElementById('totalWorkingDays');
+        const salaryError = document.getElementById('salaryError');
+        const workingDaysError = document.getElementById('workingDaysError');
+        
+        const leaveRecordsContainer = document.getElementById('leaveRecordsContainer');
+        const addLeaveDayBtn = document.getElementById('addLeaveDayBtn');
+
+        const overtimeDaysContainer = document.getElementById('overtimeDaysContainer');
+        const addOvertimeDayBtn = document.getElementById('addOvertimeDayBtn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const resultsArea = document.getElementById('results');
+        const currentMonthDisplay = document.getElementById('currentMonthDisplay');
+
+        // Result display elements
+        const displayMonthlySalary = document.getElementById('displayMonthlySalary');
+        const displayHourlyWage = document.getElementById('displayHourlyWage');
+        const displayTotalOvertimeDays = document.getElementById('displayTotalOvertimeDays');
+        const displayTotalOvertimeHours = document.getElementById('displayTotalOvertimeHours');
+        const displayPureOvertimePay = document.getElementById('displayPureOvertimePay');
+        const displayLunchSubsidy = document.getElementById('displayLunchSubsidy');
+        const displayOvertimeMealSubsidy = document.getElementById('displayOvertimeMealSubsidy');
+        const displaySickLeaveDeduction = document.getElementById('displaySickLeaveDeduction');
+        const displayPersonalLeaveDeduction = document.getElementById('displayPersonalLeaveDeduction');
+        const displayLaborInsuranceDeduction = document.getElementById('displayLaborInsuranceDeduction');
+        const displayHealthInsuranceDeduction = document.getElementById('displayHealthInsuranceDeduction');
+        const displayGrandTotalPay = document.getElementById('displayGrandTotalPay');
+
+        let overtimeEntries = []; // Stores data for each overtime entry (type and hours)
+        let leaveEntries = []; // Stores data for each leave entry (date, type and duration)
+
+        // Initialize current month display
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth() + 1; // getMonth() returns 0-11, so add 1
+        currentMonthDisplay.textContent = `${currentYear} 年 ${currentMonth} 月`;
+
+        // Local Storage Key
+        const LOCAL_STORAGE_KEY = 'overtimeCalculatorDataV11'; // Updated key for new version
+
+        // Taiwan Public Holidays (YYYY-MM-DD format) - Fixed list
+        // Data sourced from 行政院人事行政總處 (Directorate-General of Personnel Administration, Executive Yuan)
+        // Note: This list is static and might not reflect last-minute changes or special adjustments (e.g., make-up workdays).
+        // Users are advised to manually verify for critical accuracy.
+        const publicHolidays = new Set([
+            // 2024
+            "2024-01-01", // 元旦
+            "2024-02-08", "2024-02-09", "2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14", // 農曆春節 (除夕至初五，含調整放假)
+            "2024-02-28", // 和平紀念日
+            "2024-04-04", // 兒童節
+            "2024-04-05", // 清明節
+            "2024-05-01", // 勞動節 (適用勞基法勞工)
+            "2024-06-10", // 端午節
+            "2024-09-17", // 中秋節
+            "2024-10-10", // 國慶日
+
+            // 2025
+            "2025-01-01", // 元旦
+            "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31", "2025-02-01", "2025-02-02", "2025-02-03", "2025-02-04", // 農曆春節 (除夕至初五，含調整放假)
+            "2025-02-28", // 和平紀念日
+            "2025-04-04", // 兒童節
+            "2025-04-05", // 清明節
+            "2025-05-01", // 勞動節 (適用勞基法勞工)
+            "2025-06-02", // 端午節 (補假，因5/31為週六)
+            "2025-10-06", // 中秋節
+            "2025-10-10", // 國慶日
+
+            // 2026
+            "2026-01-01", // 元旦
+            "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", // 農曆春節 (除夕至初五，含調整放假)
+            "2026-02-28", // 和平紀念日 (週六)
+            "2026-04-04", // 兒童節 (週六)
+            "2026-04-05", // 清明節 (週日)
+            "2026-05-01", // 勞動節 (適用勞基法勞工)
+            "2026-06-19", // 端午節
+            "2026-09-25", // 中秋節
+            "2026-10-10", // 國慶日 (週六)
+        ]);
+
+        // 勞工保險投保薪資分級表 (僅列出部分級距，實際請參考勞保局公告)
+        // 勞工負擔比例：11% (勞保普通事故保險費率) * 20% (勞工負擔比例) = 2.2%
+        // 職業災害保險費率由雇主全額負擔，故不計入勞工自付額。
+        const laborInsuranceTiers = [
+            { min: 11100, max: 27600, base: 27600 },
+            { min: 27601, max: 28800, base: 28800 },
+            { min: 28801, max: 30300, base: 30300 },
+            { min: 30301, max: 31800, base: 31800 },
+            { min: 31801, max: 33300, base: 33300 },
+            { min: 33301, max: 34800, base: 34800 },
+            { min: 34801, max: 36300, base: 36300 },
+            { min: 36301, max: 38200, base: 38200 },
+            { min: 38201, max: 40100, base: 40100 },
+            { min: 40101, max: 42000, base: 42000 },
+            { min: 42001, max: 43900, base: 43900 },
+            { min: 43901, max: 45800, base: 45800 },
+            { min: 45801, max: 48200, base: 48200 },
+            { min: 48201, max: 50600, base: 50600 },
+            { min: 50601, max: 53000, base: 53000 },
+            { min: 53001, max: 55400, base: 55400 },
+            { min: 55401, max: 57800, base: 57800 },
+            { min: 57801, max: 60800, base: 60800 },
+            { min: 60801, max: 64100, base: 64100 },
+            { min: 64101, max: 67400, base: 67400 },
+            { min: 67401, max: 71200, base: 71200 },
+            { min: 71201, max: 76500, base: 76500 },
+            { min: 76501, max: 80800, base: 80800 },
+            { min: 80801, max: 87800, base: 87800 },
+            { min: 87801, max: 92100, base: 92100 },
+            { min: 92101, max: 98800, base: 98800 },
+            { min: 98801, max: 106700, base: 106700 },
+            { min: 106701, max: 115500, base: 115500 },
+            { min: 115501, max: 126300, base: 126300 },
+            { min: 126301, max: 137200, base: 137200 },
+            { min: 137201, max: 150000, base: 150000 },
+            { min: 150001, max: 160000, base: 160000 },
+            { min: 160001, max: 170000, base: 170000 },
+            { min: 170001, max: 180000, base: 180000 },
+            { min: 180001, max: 190000, base: 190000 },
+            { min: 190001, max: 200000, base: 200000 },
+            { min: 200001, max: 210000, base: 210000 },
+            { min: 210001, max: 220000, base: 220000 },
+            { min: 220001, max: 230000, base: 230000 },
+            { min: 230001, max: 240000, base: 240000 },
+            { min: 240001, max: 250000, base: 250000 },
+            { min: 250001, max: 260000, base: 260000 },
+            { min: 260001, max: 270000, base: 270000 },
+            { min: 270001, max: 280000, base: 280000 },
+            { min: 280001, max: 290000, base: 290000 },
+            { min: 290001, max: 300000, base: 300000 },
+            { min: 300001, max: 310000, base: 310000 },
+            { min: 310001, max: 320000, base: 320000 },
+            { min: 320001, max: 330000, base: 330000 },
+            { min: 330001, max: 340000, base: 340000 },
+            { min: 340001, max: 350000, base: 350000 },
+            { min: 350001, max: 360000, base: 360000 },
+            { min: 360001, max: 370000, base: 370000 },
+            { min: 370001, max: 380000, base: 380000 },
+            { min: 380001, max: 390000, base: 390000 },
+            { min: 390001, max: 400000, base: 400000 },
+            { min: 400001, max: 410000, base: 410000 },
+            { min: 410001, max: 420000, base: 420000 },
+            { min: 420001, max: 430000, base: 430000 },
+            { min: 430001, max: 440000, base: 440000 },
+            { min: 440001, max: 450000, base: 450000 },
+            { min: 450001, max: 460000, base: 460000 },
+            { min: 460001, max: 470000, base: 470000 },
+            { min: 470001, max: 480000, base: 480000 },
+            { min: 480001, max: 490000, base: 490000 },
+            { min: 490001, max: 500000, base: 500000 },
+            { min: 500001, max: 510000, base: 510000 },
+            { min: 510001, max: 520000, base: 520000 },
+            { min: 520001, max: 530000, base: 530000 },
+            { min: 530001, max: 540000, base: 540000 },
+            { min: 540001, max: 550000, base: 550000 },
+            { min: 550001, max: 560000, base: 560000 },
+            { min: 560001, max: 570000, base: 570000 },
+            { min: 570001, max: 580000, base: 580000 },
+            { min: 580001, max: 590000, base: 590000 },
+            { min: 590001, max: 600000, base: 600000 },
+            { min: 600001, max: 610000, base: 610000 },
+            { min: 610001, max: 620000, base: 620000 },
+            { min: 620001, max: 630000, base: 630000 },
+            { min: 630001, max: 640000, base: 640000 },
+            { min: 640001, max: 650000, base: 650000 },
+            { min: 650001, max: 660000, base: 660000 },
+            { min: 660001, max: 670000, base: 670000 },
+            { min: 670001, max: 680000, base: 680000 },
+            { min: 680001, max: 690000, base: 690000 },
+            { min: 690001, max: 700000, base: 700000 },
+            { min: 700001, max: 710000, base: 710000 },
+            { min: 710001, max: 720000, base: 720000 },
+            { min: 720001, max: 730000, base: 730000 },
+            { min: 730001, max: 740000, base: 740000 },
+            { min: 740001, max: 750000, base: 750000 },
+            { min: 750001, max: 760000, base: 760000 },
+            { min: 760001, max: 770000, base: 770000 },
+            { min: 770001, max: 780000, base: 780000 },
+            { min: 780001, max: 790000, base: 790000 },
+            { min: 790001, max: 800000, base: 800000 },
+            { min: 800001, max: 810000, base: 810000 },
+            { min: 810001, max: 820000, base: 820000 },
+            { min: 820001, max: 830000, base: 830000 },
+            { min: 830001, max: 840000, base: 840000 },
+            { min: 840001, max: 850000, base: 850000 },
+            { min: 850001, max: 860000, base: 860000 },
+            { min: 860001, max: 870000, base: 870000 },
+            { min: 870001, max: 880000, base: 880000 },
+            { min: 880001, max: 890000, base: 890000 },
+            { min: 890001, max: 900000, base: 900000 },
+            { min: 900001, max: 910000, base: 910000 },
+            { min: 910001, max: 920000, base: 920000 },
+            { min: 920001, max: 930000, base: 930000 },
+            { min: 930001, max: 940000, base: 940000 },
+            { min: 940001, max: 950000, base: 950000 },
+            { min: 950001, max: 960000, base: 960000 },
+            { min: 960001, max: 970000, base: 970000 },
+            { min: 970001, max: 980000, base: 980000 },
+            { min: 980001, max: 990000, base: 990000 },
+            { min: 990001, max: 1000000, base: 1000000 },
+            { min: 1000001, max: Infinity, base: 1000000 } // 最高級距
+        ];
+        const laborInsuranceRate = 0.11; // 勞保普通事故保險費率 11%
+        const laborInsuranceEmployeeShare = 0.20; // 勞工負擔比例 20% (自付20%，雇主70%，政府10%)
+
+        // 全民健康保險投保金額分級表 (僅列出部分級距，實際請參考健保署公告)
+        // 健保費率：5.17% (目前費率)
+        // 勞工負擔比例：30% (自付30%，雇主60%，政府10%)
+        const healthInsuranceTiers = [
+            { min: 27470, max: 28800, base: 28800 },
+            { min: 28801, max: 30300, base: 30300 },
+            { min: 30301, max: 31800, base: 31800 },
+            { min: 31801, max: 33300, base: 33300 },
+            { min: 33301, max: 34800, base: 34800 },
+            { min: 34801, max: 36300, base: 36300 },
+            { min: 36301, max: 38200, base: 38200 },
+            { min: 38201, max: 40100, base: 40100 },
+            { min: 40101, max: 42000, base: 42000 },
+            { min: 42001, max: 43900, base: 43900 },
+            { min: 43901, max: 45800, base: 45800 },
+            { min: 45801, max: 48200, base: 48200 },
+            { min: 48201, max: 50600, base: 50600 },
+            { min: 50601, max: 53000, base: 53000 },
+            { min: 53001, max: 55400, base: 55400 },
+            { min: 55401, max: 57800, base: 57800 },
+            { min: 57801, max: 60800, base: 60800 },
+            { min: 60801, max: 64100, base: 64100 },
+            { min: 64101, max: 67400, base: 67400 },
+            { min: 67401, max: 71200, base: 71200 },
+            { min: 71201, max: 76500, base: 76500 },
+            { min: 76501, max: 80800, base: 80800 },
+            { min: 80801, max: 87800, base: 87800 },
+            { min: 87801, max: 92100, base: 92100 },
+            { min: 92101, max: 98800, base: 98800 },
+            { min: 98801, max: 106700, base: 106700 },
+            { min: 106701, max: 115500, base: 115500 },
+            { min: 115501, max: 126300, base: 126300 },
+            { min: 126301, max: 137200, base: 137200 },
+            { min: 137201, max: 150000, base: 150000 },
+            { min: 150001, max: 160000, base: 160000 },
+            { min: 160001, max: 170000, base: 170000 },
+            { min: 170001, max: 180000, base: 180000 },
+            { min: 180001, max: 190000, base: 190000 },
+            { min: 190001, max: 200000, base: 200000 },
+            { min: 200001, max: 210000, base: 210000 },
+            { min: 210001, max: 220000, base: 220000 },
+            { min: 220001, max: 230000, base: 230000 },
+            { min: 230001, max: 240000, base: 240000 },
+            { min: 240001, max: Infinity, base: 240000 } // 最高級距
+        ];
+        const healthInsuranceRate = 0.0517; // 健保費率 5.17%
+        const healthInsuranceEmployeeShare = 0.30; // 勞工負擔比例 30% (自付30%，雇主60%，政府10%)
+
+        // Function: Get Labor Insurance Contribution Base
+        function getLaborInsuranceBase(salary) {
+            for (const tier of laborInsuranceTiers) {
+                if (salary >= tier.min && salary <= tier.max) {
+                    return tier.base;
+                }
+            }
+            return laborInsuranceTiers[laborInsuranceTiers.length - 1].base; // Fallback to highest tier
+        }
+
+        // Function: Get Health Insurance Contribution Base
+        function getHealthInsuranceBase(salary) {
+            for (const tier of healthInsuranceTiers) {
+                if (salary >= tier.min && salary <= tier.max) {
+                    return tier.base;
+                }
+            }
+            return healthInsuranceTiers[healthInsuranceTiers.length - 1].base; // Fallback to highest tier
+        }
+
+        // Function: Populate Year and Month Selectors
+        function populateMonthYearSelectors() {
+            const startYear = 2024; // Start year for selection
+            const endYear = currentYear + 2; // Current year + 2 years for future planning
+
+            for (let y = startYear; y <= endYear; y++) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = `${y} 年`;
+                calcYearSelect.appendChild(option);
+            }
+
+            for (let m = 1; m <= 12; m++) {
+                const option = document.createElement('option');
+                option.value = m;
+                option.textContent = `${m} 月`;
+                calcMonthSelect.appendChild(option);
+            }
+
+            // Set default to current year and month
+            calcYearSelect.value = currentYear;
+            calcMonthSelect.value = currentMonth;
+
+            // Add event listeners for changes
+            calcYearSelect.addEventListener('change', () => {
+                currentYear = parseInt(calcYearSelect.value);
+                currentMonthDisplay.textContent = `${currentYear} 年 ${currentMonth} 月`;
+                saveData(); // Save selected year/month
+            });
+            calcMonthSelect.addEventListener('change', () => {
+                currentMonth = parseInt(calcMonthSelect.value);
+                currentMonthDisplay.textContent = `${currentYear} 年 ${currentMonth} 月`;
+                saveData(); // Save selected year/month
+            });
+        }
+
+        // Function: Generate overtime hours options (1.0 to 6.0, in 0.5 increments)
+        function generateOvertimeHoursOptions(selectedValue = 1.0) { // Default to 1.0 hour
+            let optionsHtml = '';
+            for (let i = 1.0; i <= 6; i += 0.5) { // Start from 1.0
+                const selected = (i === selectedValue) ? 'selected' : '';
+                optionsHtml += `<option value="${i}" ${selected}>${i} 小時</option>`;
+            }
+            return optionsHtml;
+        }
+
+        // Function: Generate leave duration options (0.5 to 5.0, in 0.5 increments)
+        function generateLeaveDurationOptions(selectedValue = 1) {
+            let optionsHtml = '';
+            for (let i = 0.5; i <= 5; i += 0.5) {
+                const selected = (i === selectedValue) ? 'selected' : '';
+                optionsHtml += `<option value="${i}" ${selected}>${i} 天</option>`;
+            }
+            return optionsHtml;
+        }
+
+        // Function: Add an overtime entry row
+        function addOvertimeDayEntry(data = {}) {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'entry-item'; // Unified style
+            const uniqueIndex = Date.now() + Math.random(); 
+            entryDiv.dataset.index = uniqueIndex; 
+
+            entryDiv.innerHTML = `
+                <div class="flex-grow">
+                    <label for="overtimeDate-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">加班日期</label>
+                    <input type="date" id="overtimeDate-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex-grow">
+                    <label for="overtimeType-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">加班類型</label>
+                    <select id="overtimeType-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="weekday">平日加班</option>
+                        <option value="restDay">休息日加班</option>
+                        <option value="holiday">國定假日加班</option>
+                    </select>
+                </div>
+                <div class="flex-grow">
+                    <label for="overtimeHours-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">加班時數</label>
+                    <select id="overtimeHours-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        ${generateOvertimeHoursOptions(data.hours || 1.0)}
+                    </select>
+                </div>
+                <button type="button" class="remove-btn btn btn-danger text-sm px-3 py-2">移除</button>
+            `;
+            
+            overtimeDaysContainer.appendChild(entryDiv);
+            const newEntry = {
+                element: entryDiv,
+                dateInput: entryDiv.querySelector('input[type="date"]'),
+                typeSelect: entryDiv.querySelector('select[id^="overtimeType-"]'),
+                hoursSelect: entryDiv.querySelector('select[id^="overtimeHours-"]')
+            };
+            overtimeEntries.push(newEntry);
+
+            entryDiv.querySelector('.remove-btn').addEventListener('click', () => {
+                removeEntry(entryDiv, overtimeEntries);
+                saveData();
+            });
+
+            newEntry.dateInput.value = data.date || `${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`;
+            newEntry.typeSelect.value = data.type || 'weekday';
+            newEntry.hoursSelect.value = data.hours || 1.0; // Default to 1.0 hour
+
+            newEntry.dateInput.addEventListener('change', saveData);
+            newEntry.typeSelect.addEventListener('change', saveData);
+            newEntry.hoursSelect.addEventListener('change', saveData);
+
+            saveData();
+        }
+
+        // Function: Add a leave entry row
+        function addLeaveDayEntry(data = {}) {
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'entry-item'; // Unified style
+            const uniqueIndex = Date.now() + Math.random(); 
+            entryDiv.dataset.index = uniqueIndex; 
+
+            entryDiv.innerHTML = `
+                <div class="flex-grow">
+                    <label for="leaveDate-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">請假日期</label>
+                    <input type="date" id="leaveDate-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex-grow">
+                    <label for="leaveType-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">假別</label>
+                    <select id="leaveType-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="sickLeave">病假 (半薪)</option>
+                        <option value="personalLeave">事假 (無薪)</option>
+                        <option value="annualLeave">特休 (全薪)</option>
+                        <option value="marriageLeave">婚假 (全薪)</option>
+                        <option value="bereavementLeave">喪假 (全薪)</option>
+                        <option value="officialLeave">公假 (全薪)</option>
+                        <option value="maternityLeave">產假 (全薪)</option>
+                        <option value="menstrualLeave">生理假 (半薪)</option>
+                        <option value="typhoonLeave">颱風假 (不扣薪)</option>
+                        <option value="occupationalInjuryLeave">公傷病假 (全薪)</option>
+                    </select>
+                </div>
+                <div class="flex-grow">
+                    <label for="leaveDuration-${uniqueIndex}" class="block mb-2 text-sm font-medium text-gray-400">請假天數</label>
+                    <select id="leaveDuration-${uniqueIndex}" class="w-full p-2 border border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        ${generateLeaveDurationOptions(data.duration || 1)}
+                    </select>
+                </div>
+                <button type="button" class="remove-btn btn btn-danger text-sm px-3 py-2">移除</button>
+            `;
+            
+            leaveRecordsContainer.appendChild(entryDiv);
+            const newEntry = {
+                element: entryDiv,
+                dateInput: entryDiv.querySelector('input[type="date"]'),
+                typeSelect: entryDiv.querySelector('select[id^="leaveType-"]'),
+                durationSelect: entryDiv.querySelector('select[id^="leaveDuration-"]')
+            };
+            leaveEntries.push(newEntry);
+
+            entryDiv.querySelector('.remove-btn').addEventListener('click', () => {
+                removeEntry(entryDiv, leaveEntries);
+                saveData();
+            });
+
+            newEntry.dateInput.value = data.date || `${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`;
+            newEntry.typeSelect.value = data.type || 'sickLeave';
+            newEntry.durationSelect.value = data.duration || 1; 
+
+            newEntry.dateInput.addEventListener('change', saveData);
+            newEntry.typeSelect.addEventListener('change', saveData);
+            newEntry.durationSelect.addEventListener('change', saveData);
+
+            saveData();
+        }
+
+        // Function: Generic remove entry
+        function removeEntry(entryDiv, entryArray) {
+            entryDiv.parentNode.removeChild(entryDiv);
+            // Remove the corresponding data from the array based on element reference
+            const index = entryArray.indexOf(entryArray.find(e => e.element === entryDiv));
+            if (index > -1) {
+                entryArray.splice(index, 1);
+            }
+        }
+
+        // Function: Calculate working days in a specific month (Mon-Fri, excluding public holidays)
+        function getWorkingDaysInMonth(year, month) {
+            let workingDays = 0;
+            const date = new Date(year, month - 1, 1); // Month is 0-indexed for Date constructor
+            while (date.getMonth() === month - 1) {
+                const day = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+                // Format current date for holiday check
+                const yyyy = date.getFullYear();
+                const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+                const dd = date.getDate().toString().padStart(2, '0');
+                const currentDateStr = `${yyyy}-${mm}-${dd}`;
+
+                // Exclude Sunday (0) and Saturday (6) AND public holidays
+                if (day !== 0 && day !== 6 && !publicHolidays.has(currentDateStr)) {
+                    workingDays++;
+                }
+                date.setDate(date.getDate() + 1);
+            }
+            return workingDays;
+        }
+
+        // Function: Save data to localStorage
+        function saveData() {
+            const data = {
+                companyName: companyNameSelect.value, // Save selected value
+                monthlySalary: monthlySalaryInput.value,
+                deductInsurance: deductInsuranceCheckbox.checked,
+                healthInsuranceDependents: healthInsuranceDependentsInput.value,
+                calcYear: calcYearSelect.value,
+                calcMonth: calcMonthSelect.value,
+                totalWorkingDays: totalWorkingDaysInput.value,
+                overtimeEntries: overtimeEntries.map(entry => ({
+                    date: entry.dateInput.value,
+                    type: entry.typeSelect.value,
+                    hours: parseFloat(entry.hoursSelect.value)
+                })),
+                leaveEntries: leaveEntries.map(entry => ({
+                    date: entry.dateInput.value,
+                    type: entry.typeSelect.value,
+                    duration: parseFloat(entry.durationSelect.value)
+                }))
+            };
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.error("Error saving data to localStorage:", e);
+            }
+        }
+
+        // Function: Load data from localStorage
+        function loadData() {
+            try {
+                const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    companyNameSelect.value = data.companyName || '非廣達'; // Load selected value, default to '非廣達'
+                    monthlySalaryInput.value = data.monthlySalary || '';
+                    deductInsuranceCheckbox.checked = data.deductInsurance || false;
+                    healthInsuranceDependentsInput.value = data.healthInsuranceDependents || '0';
+                    
+                    if (deductInsuranceCheckbox.checked) {
+                        dependentsInputGroup.classList.add('active');
+                    } else {
+                        dependentsInputGroup.classList.remove('active');
+                    }
+
+                    calcYearSelect.value = data.calcYear || currentYear;
+                    calcMonthSelect.value = data.calcMonth || currentMonth;
+                    currentYear = parseInt(calcYearSelect.value);
+                    currentMonth = parseInt(calcMonthSelect.value);
+                    currentMonthDisplay.textContent = `${currentYear} 年 ${currentMonth} 月`;
+
+                    overtimeDaysContainer.innerHTML = '';
+                    overtimeEntries = [];
+                    leaveRecordsContainer.innerHTML = '';
+                    leaveEntries = [];
+
+                    if (data.overtimeEntries && data.overtimeEntries.length > 0) {
+                        data.overtimeEntries.forEach(entryData => addOvertimeDayEntry(entryData));
+                    } else {
+                        addOvertimeDayEntry(); 
+                    }
+
+                    if (data.leaveEntries && data.leaveEntries.length > 0) {
+                        data.leaveEntries.forEach(entryData => addLeaveDayEntry(entryData));
+                    } else {
+                        addLeaveDayEntry(); 
+                    }
+
+                } else {
+                    addOvertimeDayEntry(); 
+                    addLeaveDayEntry(); 
+                }
+            } catch (e) {
+                console.error("Error loading data from localStorage:", e);
+                clearAll(); 
+            }
+        }
+
+        // Function: Calculate overtime and leave deductions
+        function calculateOvertimeAndLeave() {
+            // Hide all error messages and results
+            salaryError.classList.add('hidden');
+            workingDaysError.classList.add('hidden');
+            resultsArea.classList.add('hidden');
+
+            let companyName = companyNameSelect.value; // Get selected value
+            let monthlySalary = parseFloat(monthlySalaryInput.value);
+            let totalWorkingDaysCalculated;
+
+            if (isNaN(monthlySalary) || monthlySalary <= 0) {
+                salaryError.classList.remove('hidden');
+                return;
+            }
+
+            if (totalWorkingDaysInput.value.trim() === '') {
+                totalWorkingDaysCalculated = getWorkingDaysInMonth(parseInt(calcYearSelect.value), parseInt(calcMonthSelect.value));
+                workingDaysError.classList.add('hidden');
+            } else {
+                totalWorkingDaysCalculated = parseFloat(totalWorkingDaysInput.value);
+                if (isNaN(totalWorkingDaysCalculated) || totalWorkingDaysCalculated <= 0) { 
+                    workingDaysError.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const standardMonthlyHours = 240;
+            let hourlyWage = monthlySalary / standardMonthlyHours;
+            const dailySalary = hourlyWage * 8;
+
+            // --- Overtime Calculation ---
+            let pureOvertimePay = 0; 
+            let totalOvertimeHours = 0; 
+            let actualOvertimeDaysCount = 0; 
+            let totalOvertimeMealSubsidy = 0; 
+
+            // Check if company is Quanta for meal subsidies
+            const isQuanta = (companyName === '廣達'); // Simplified check
+
+            for (let i = 0; i < overtimeEntries.length; i++) {
+                const entry = overtimeEntries[i];
+                const overtimeType = entry.typeSelect.value;
+                let dailyHours = parseFloat(entry.hoursSelect.value); 
+
+                if (isNaN(dailyHours)) {
+                    alert(`第 ${i + 1} 個加班日的時數選擇無效，請選擇一個有效的時數。`);
+                    return; 
+                }
+
+                let effectiveDailyHours = dailyHours;
+                if (dailyHours > 0 && dailyHours < 1) { 
+                    effectiveDailyHours = 0; 
+                }
+
+                if (effectiveDailyHours > 0) { 
+                    actualOvertimeDaysCount++; 
+                }
+                
+                let dailyPay = 0;
+
+                if (effectiveDailyHours > 0) { 
+                    switch (overtimeType) {
+                        case "weekday":
+                            if (effectiveDailyHours <= 2) {
+                                dailyPay = effectiveDailyHours * hourlyWage * 1.33;
+                            } else { 
+                                dailyPay = (2 * hourlyWage * 1.33) + ((effectiveDailyHours - 2) * hourlyWage * 1.66);
+                            }
+                            break;
+                        case "restDay":
+                            if (effectiveDailyHours <= 2) {
+                                dailyPay = effectiveDailyHours * hourlyWage * 1.33;
+                            } else if (effectiveDailyHours <= 8) {
+                                dailyPay = (2 * hourlyWage * 1.33) + ((effectiveDailyHours - 2) * hourlyWage * 1.66);
+                            } else { 
+                                dailyPay = (2 * hourlyWage * 1.33) + (6 * hourlyWage * 1.66) + ((effectiveDailyHours - 8) * hourlyWage * 2.66);
+                            }
+                            break;
+                        case "holiday":
+                            dailyPay = effectiveDailyHours * hourlyWage * 2.00;
+                            break;
+                    }
+                }
+                pureOvertimePay += dailyPay;
+                totalOvertimeHours += effectiveDailyHours; 
+
+                if (isQuanta && effectiveDailyHours >= 2) { 
+                    totalOvertimeMealSubsidy += 60;
+                }
+            }
+
+            // --- Leave Deduction Calculation ---
+            let totalSickLeaveDays = 0;
+            let totalPersonalLeaveDays = 0;
+            let sickLeaveDeduction = 0;
+            let personalLeaveDeduction = 0;
+            let totalLeaveDaysForLunchSubsidy = 0;
+
+            for (let i = 0; i < leaveEntries.length; i++) {
+                const entry = leaveEntries[i];
+                const leaveType = entry.typeSelect.value;
+                const leaveDuration = parseFloat(entry.durationSelect.value);
+
+                if (isNaN(leaveDuration) || leaveDuration < 0) {
+                    alert(`第 ${i + 1} 個請假記錄的天數選擇無效，請選擇一個有效的天數。`);
+                    return;
+                }
+
+                totalLeaveDaysForLunchSubsidy += leaveDuration;
+
+                switch (leaveType) {
+                    case "sickLeave":
+                    case "menstrualLeave": 
+                        totalSickLeaveDays += leaveDuration;
+                        sickLeaveDeduction += leaveDuration * dailySalary * 0.5;
+                        break;
+                    case "personalLeave":
+                        totalPersonalLeaveDays += leaveDuration;
+                        personalLeaveDeduction += leaveDuration * dailySalary * 1.0;
+                        break;
+                    case "annualLeave":
+                    case "marriageLeave":
+                    case "bereavementLeave":
+                    case "officialLeave":
+                    case "maternityLeave":
+                    case "occupationalInjuryLeave":
+                    case "typhoonLeave": 
+                        break;
+                }
+            }
+
+            let lunchSubsidy = 0;
+            if (isQuanta) {
+                const daysCountedForLunchSubsidy = Math.max(0, totalWorkingDaysCalculated - totalLeaveDaysForLunchSubsidy); 
+                lunchSubsidy = daysCountedForLunchSubsidy * 55;
+            }
+            
+            // --- Labor and Health Insurance Deduction Calculation ---
+            let laborInsuranceDeduction = 0;
+            let healthInsuranceDeduction = 0;
+
+            if (deductInsuranceCheckbox.checked) {
+                const laborBase = getLaborInsuranceBase(monthlySalary);
+                laborInsuranceDeduction = laborBase * laborInsuranceRate * laborInsuranceEmployeeShare;
+
+                const healthBase = getHealthInsuranceBase(monthlySalary);
+                const dependentsCount = parseInt(healthInsuranceDependentsInput.value) || 0;
+                const totalInsurancePersons = 1 + Math.min(dependentsCount, 2); // 本人1人 + 眷屬最多2人 (3人以上以3人計)
+                healthInsuranceDeduction = healthBase * healthInsuranceRate * healthInsuranceEmployeeShare * totalInsurancePersons;
+            }
+
+            // Grand Total = Monthly Salary + Pure Overtime Pay + Lunch Subsidy + Overtime Meal Subsidy - Sick Leave Deduction - Personal Leave Deduction - Labor Insurance Deduction - Health Insurance Deduction
+            const grandTotalPay = monthlySalary + pureOvertimePay + lunchSubsidy + totalOvertimeMealSubsidy - sickLeaveDeduction - personalLeaveDeduction - laborInsuranceDeduction - healthInsuranceDeduction;
+
+            // Display Results
+            displayMonthlySalary.textContent = monthlySalary.toLocaleString();
+            displayHourlyWage.textContent = hourlyWage.toFixed(2);
+            displayTotalOvertimeDays.textContent = actualOvertimeDaysCount;
+            displayTotalOvertimeHours.textContent = totalOvertimeHours.toFixed(1);
+            displayPureOvertimePay.textContent = pureOvertimePay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayLunchSubsidy.textContent = lunchSubsidy.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayOvertimeMealSubsidy.textContent = totalOvertimeMealSubsidy.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displaySickLeaveDeduction.textContent = sickLeaveDeduction.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayPersonalLeaveDeduction.textContent = personalLeaveDeduction.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayLaborInsuranceDeduction.textContent = laborInsuranceDeduction.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayHealthInsuranceDeduction.textContent = healthInsuranceDeduction.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            displayGrandTotalPay.textContent = grandTotalPay.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            
+            resultsArea.classList.remove('hidden'); // Show results area
+            saveData(); // Save data after calculation
+        }
+
+        // Function: Clear all inputs and results, and clear localStorage
+        function clearAll() {
+            companyNameSelect.value = '非廣達'; // Reset company name to default
+            monthlySalaryInput.value = '';
+            deductInsuranceCheckbox.checked = false;
+            healthInsuranceDependentsInput.value = '0';
+            dependentsInputGroup.classList.remove('active');
+            totalWorkingDaysInput.value = '';
+            overtimeDaysContainer.innerHTML = ''; 
+            overtimeEntries = []; 
+            leaveRecordsContainer.innerHTML = '';
+            leaveEntries = [];
+            salaryError.classList.add('hidden');
+            workingDaysError.classList.add('hidden');
+            resultsArea.classList.add('hidden');
+            addOvertimeDayEntry(); 
+            addLeaveDayEntry(); 
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            calcYearSelect.value = now.getFullYear();
+            calcMonthSelect.value = now.getMonth() + 1;
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth() + 1;
+            currentMonthDisplay.textContent = `${currentYear} 年 ${currentMonth} 月`;
+        }
+
+        // Event Listeners
+        addOvertimeDayBtn.addEventListener('click', addOvertimeDayEntry);
+        addLeaveDayBtn.addEventListener('click', addLeaveDayEntry);
+        calculateBtn.addEventListener('click', calculateOvertimeAndLeave);
+        clearAllBtn.addEventListener('click', clearAll);
+
+        // Toggle dependents input visibility based on checkbox
+        deductInsuranceCheckbox.addEventListener('change', () => {
+            if (deductInsuranceCheckbox.checked) {
+                dependentsInputGroup.classList.add('active');
+            } else {
+                dependentsInputGroup.classList.remove('active');
+            }
+            saveData(); // Save checkbox state
+        });
+
+        // Add event listeners for main input fields to auto-save data
+        companyNameSelect.addEventListener('change', saveData); // Save selected company name on change
+        monthlySalaryInput.addEventListener('input', saveData);
+        healthInsuranceDependentsInput.addEventListener('input', saveData);
+        totalWorkingDaysInput.addEventListener('input', saveData);
+
+        // Populate month/year selectors on load
+        populateMonthYearSelectors(); 
+
+        // Load data from localStorage on page load
+        window.addEventListener('load', loadData);
+
+    </script>
+</body>
+</html>
